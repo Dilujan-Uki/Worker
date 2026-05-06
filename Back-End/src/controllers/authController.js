@@ -9,11 +9,13 @@ export const registerUser = async (req, res) => {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
+      console.log('Registration failed: Missing fields', { name, email: !!email, password: !!password });
       return res.status(400).json({ status: 'error', message: 'All fields are required' });
     }
 
     const userExists = await User.findOne({ email });
     if (userExists) {
+      console.log('Registration failed: User already exists', email);
       return res.status(400).json({ status: 'error', message: 'User already exists' });
     }
 
@@ -27,25 +29,32 @@ export const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ status: 'error', message: error.message });
+    }
     res.status(500).json({ status: 'error', message: 'Server error' });
   }
 };
+
 
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
+      console.log('Login failed: Missing email or password');
       return res.status(400).json({ status: 'error', message: 'Email and password are required' });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
+      console.log('Login failed: User not found', email);
       return res.status(401).json({ status: 'error', message: 'Invalid email or password' });
     }
 
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
+      console.log('Login failed: Invalid password', email);
       return res.status(401).json({ status: 'error', message: 'Invalid email or password' });
     }
 
@@ -61,6 +70,7 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Server error' });
   }
 };
+
 
 export const getProfile = async (req, res) => {
   try {
