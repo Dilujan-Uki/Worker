@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -5,25 +7,46 @@
 }
 
 :root {
-  --bg: #0a0a0a;
-  --bg-card: #111111;
-  --bg-hover: #1a1a1a;
-  --border: #222222;
-  --border-light: #2a2a2a;
-  --accent: #e8ff47;
-  --accent-dim: rgba(232, 255, 71, 0.12);
-  --accent-hover: #d4eb3a;
-  --text: #f0f0f0;
-  --text-muted: #666666;
-  --text-dim: #444444;
-  --red: #ff4757;
-  --red-dim: rgba(255, 71, 87, 0.12);
-  --green: #2ed573;
-  --green-dim: rgba(46, 213, 115, 0.12);
+  /* ── Light palette ─────────────────────────────────────── */
+  --bg:           #f7f7f5;
+  --bg-card:      #ffffff;
+  --bg-hover:     #f0f0ed;
+  --bg-input:     #fafafa;
+
+  --border:       #e4e4e0;
+  --border-light: #d0d0cc;
+  --border-focus: #2563eb;
+
+  --accent:       #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-dim:   rgba(37, 99, 235, 0.08);
+  --accent-text:  #ffffff;
+
+  --text:         #1a1a1a;
+  --text-muted:   #6b6b6b;
+  --text-dim:     #aaaaaa;
+  --text-placeholder: #c0c0bc;
+
+  --red:          #e53e3e;
+  --red-dim:      rgba(229, 62, 62, 0.08);
+  --red-border:   rgba(229, 62, 62, 0.25);
+
+  --green:        #16a34a;
+  --green-dim:    rgba(22, 163, 74, 0.08);
+
+  --live:         #16a34a;
+  --live-dim:     rgba(22, 163, 74, 0.06);
+  --live-border:  rgba(22, 163, 74, 0.2);
+
+  --shadow-sm:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow:       0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg:    0 12px 32px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.06);
+
   --font-display: 'Syne', sans-serif;
-  --font-mono: 'DM Mono', monospace;
-  --radius: 10px;
-  --radius-sm: 6px;
+  --font-mono:    'DM Mono', monospace;
+  --radius:       12px;
+  --radius-sm:    8px;
+  --radius-xs:    5px;
 }
 
 html, body {
@@ -32,6 +55,7 @@ html, body {
   color: var(--text);
   font-family: var(--font-display);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
@@ -45,7 +69,7 @@ button {
   outline: none;
 }
 
-input, textarea {
+input, textarea, select {
   font-family: var(--font-display);
   outline: none;
 }
@@ -56,12 +80,15 @@ a {
 }
 
 ::-webkit-scrollbar {
-  width: 4px;
+  width: 5px;
 }
 ::-webkit-scrollbar-track {
   background: var(--bg);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border-light);
-  border-radius: 2px;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
 }

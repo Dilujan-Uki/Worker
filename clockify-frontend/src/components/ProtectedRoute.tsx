@@ -12,11 +12,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0a0a0a',
-        color: '#444',
+        background: '#f5f5f5',
+        color: '#999',
         fontFamily: 'DM Mono, monospace',
         fontSize: '13px',
-        letterSpacing: '0.05em'
+        letterSpacing: '0.05em',
       }}>
         loading...
       </div>

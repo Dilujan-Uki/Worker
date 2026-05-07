@@ -4,7 +4,7 @@ import api from '../api/axiosInstance';
 import type { TimeEntry } from '../types';
 import './Dashboard.css';
 
-// ── helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────
 
 const formatDuration = (seconds: number): string => {
   const h = Math.floor(seconds / 3600);
@@ -13,16 +13,16 @@ const formatDuration = (seconds: number): string => {
   return [h, m, s].map(n => String(n).padStart(2, '0')).join(':');
 };
 
-const formatTime = (iso: string) =>
+const formatTime = (iso: string): string =>
   new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-const formatDate = (iso: string) =>
+const formatDate = (iso: string): string =>
   new Date(iso).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
 
-const totalSeconds = (entries: TimeEntry[]) =>
+const totalSeconds = (entries: TimeEntry[]): number =>
   entries.reduce((acc, e) => acc + (e.duration || 0), 0);
 
-// ── main component ────────────────────────────────────────────────────────────
+// ── Component ──────────────────────────────────────────────────────────────
 
 const DashboardPage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -30,13 +30,13 @@ const DashboardPage: React.FC = () => {
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [fetching, setFetching] = useState(true);
 
-  // timer state
+  // Timer state
   const [task, setTask] = useState('');
   const [running, setRunning] = useState<TimeEntry | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // manual entry modal
+  // Manual entry modal
   const [showManual, setShowManual] = useState(false);
   const [manualTask, setManualTask] = useState('');
   const [manualStart, setManualStart] = useState('');
@@ -44,7 +44,7 @@ const DashboardPage: React.FC = () => {
   const [manualError, setManualError] = useState('');
   const [manualLoading, setManualLoading] = useState(false);
 
-  // edit modal
+  // Edit modal
   const [editEntry, setEditEntry] = useState<TimeEntry | null>(null);
   const [editTask, setEditTask] = useState('');
   const [editLoading, setEditLoading] = useState(false);
@@ -52,7 +52,7 @@ const DashboardPage: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [timerLoading, setTimerLoading] = useState(false);
 
-  // ── fetch entries ──────────────────────────────────────────────────────────
+  // ── Fetch entries ────────────────────────────────────────────────────
 
   const fetchEntries = useCallback(async () => {
     try {
@@ -65,7 +65,8 @@ const DashboardPage: React.FC = () => {
         const secs = Math.floor((Date.now() - new Date(live.startTime).getTime()) / 1000);
         setElapsed(secs);
       }
-    } catch (e) {
+    } catch {
+      // errors handled by axios interceptor (401 → redirect)
     } finally {
       setFetching(false);
     }
@@ -73,7 +74,7 @@ const DashboardPage: React.FC = () => {
 
   useEffect(() => { fetchEntries(); }, [fetchEntries]);
 
-  // ── tick ───────────────────────────────────────────────────────────────────
+  // ── Tick ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (running) {
@@ -84,7 +85,7 @@ const DashboardPage: React.FC = () => {
     return () => { if (tickRef.current) clearInterval(tickRef.current); };
   }, [running]);
 
-  // ── timer controls ─────────────────────────────────────────────────────────
+  // ── Timer controls ────────────────────────────────────────────────────
 
   const handleStart = async () => {
     if (!task.trim()) return;
@@ -96,8 +97,7 @@ const DashboardPage: React.FC = () => {
       setElapsed(0);
       setTask('');
       setEntries(prev => [entry, ...prev.filter(e => !e.isRunning)]);
-    } catch (e) {
-    } finally {
+    } catch { /* silent */ } finally {
       setTimerLoading(false);
     }
   };
@@ -111,13 +111,12 @@ const DashboardPage: React.FC = () => {
       setRunning(null);
       setElapsed(0);
       setEntries(prev => prev.map(e => e._id === updated._id ? updated : e));
-    } catch (e) {
-    } finally {
+    } catch { /* silent */ } finally {
       setTimerLoading(false);
     }
   };
 
-  // ── delete ─────────────────────────────────────────────────────────────────
+  // ── Delete ────────────────────────────────────────────────────────────
 
   const handleDelete = async (id: string) => {
     setActionLoading(id);
@@ -125,19 +124,19 @@ const DashboardPage: React.FC = () => {
       await api.delete(`/entries/${id}`);
       setEntries(prev => prev.filter(e => e._id !== id));
       if (running?._id === id) { setRunning(null); setElapsed(0); }
-    } catch (e) {
-    } finally {
+    } catch { /* silent */ } finally {
       setActionLoading(null);
     }
   };
 
-  // ── manual entry ───────────────────────────────────────────────────────────
+  // ── Manual entry ──────────────────────────────────────────────────────
 
   const handleManual = async (e: React.FormEvent) => {
     e.preventDefault();
     setManualError('');
     if (!manualTask.trim() || !manualStart || !manualEnd) {
-      setManualError('All fields are required.'); return;
+      setManualError('All fields are required.');
+      return;
     }
     setManualLoading(true);
     try {
@@ -156,7 +155,7 @@ const DashboardPage: React.FC = () => {
     }
   };
 
-  // ── edit ───────────────────────────────────────────────────────────────────
+  // ── Edit ──────────────────────────────────────────────────────────────
 
   const openEdit = (entry: TimeEntry) => { setEditEntry(entry); setEditTask(entry.task); };
 
@@ -169,13 +168,12 @@ const DashboardPage: React.FC = () => {
       setEntries(prev => prev.map(en => en._id === editEntry._id ? res.data.data : en));
       if (running?._id === editEntry._id) setRunning(res.data.data);
       setEditEntry(null);
-    } catch (e) {
-    } finally {
+    } catch { /* silent */ } finally {
       setEditLoading(false);
     }
   };
 
-  // ── group by date ──────────────────────────────────────────────────────────
+  // ── Group by date ─────────────────────────────────────────────────────
 
   const grouped = entries
     .filter(e => !e.isRunning)
@@ -189,12 +187,11 @@ const DashboardPage: React.FC = () => {
   const todayTotal = entries
     .filter(e => {
       const d = new Date(e.createdAt);
-      const now = new Date();
-      return d.toDateString() === now.toDateString();
+      return d.toDateString() === new Date().toDateString();
     })
     .reduce((a, e) => a + (e.isRunning ? elapsed : e.duration), 0);
 
-  // ── render ─────────────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────
 
   return (
     <div className="dash">
@@ -206,6 +203,14 @@ const DashboardPage: React.FC = () => {
           CLOCKIFY
         </div>
         <div className="dash-user">
+          {user?.avatar && (
+            <img
+              className="dash-avatar"
+              src={user.avatar}
+              alt={user.name}
+              referrerPolicy="no-referrer"
+            />
+          )}
           <span className="dash-name">{user?.name}</span>
           <button className="dash-logout" onClick={logout}>Sign out</button>
         </div>
@@ -235,8 +240,8 @@ const DashboardPage: React.FC = () => {
             disabled={timerLoading || (!running && !task.trim())}
           >
             {timerLoading
-              ? <span className="btn-loading btn-loading--dark" />
-              : running ? '■ Stop' : '▶ Start'}
+              ? <span className="btn-loading" />
+              : running ? '\u25A0 Stop' : '\u25B6 Start'}
           </button>
           <button className="timer-manual-btn" onClick={() => setShowManual(true)} title="Add manual entry">
             + Manual
@@ -275,16 +280,16 @@ const DashboardPage: React.FC = () => {
             {running && (
               <div className="entry-group">
                 <div className="group-label">
-                  <span className="live-dot" /> Live
+                  <span><span className="live-dot" />Live</span>
                 </div>
                 <div className="entry-row entry-row--live">
                   <div className="entry-task">{running.task}</div>
                   <div className="entry-meta">
-                    <span className="entry-time">{formatTime(running.startTime)} → now</span>
+                    <span className="entry-time">{formatTime(running.startTime)} \u2192 now</span>
                     <span className="entry-dur entry-dur--live">{formatDuration(elapsed)}</span>
                   </div>
                   <div className="entry-actions">
-                    <button className="act-btn act-edit" onClick={() => openEdit(running)} title="Edit">✎</button>
+                    <button className="act-btn act-edit" onClick={() => openEdit(running)} title="Edit">\u270E</button>
                   </div>
                 </div>
               </div>
@@ -303,19 +308,19 @@ const DashboardPage: React.FC = () => {
                     <div className="entry-meta">
                       <span className="entry-time">
                         {formatTime(entry.startTime)}
-                        {entry.endTime ? ` → ${formatTime(entry.endTime)}` : ''}
+                        {entry.endTime ? ` \u2192 ${formatTime(entry.endTime)}` : ''}
                       </span>
                       <span className="entry-dur">{formatDuration(entry.duration)}</span>
                     </div>
                     <div className="entry-actions">
-                      <button className="act-btn act-edit" onClick={() => openEdit(entry)} title="Edit">✎</button>
+                      <button className="act-btn act-edit" onClick={() => openEdit(entry)} title="Edit">\u270E</button>
                       <button
                         className="act-btn act-del"
                         onClick={() => handleDelete(entry._id)}
                         disabled={actionLoading === entry._id}
                         title="Delete"
                       >
-                        {actionLoading === entry._id ? '…' : '✕'}
+                        {actionLoading === entry._id ? '\u2026' : '\u00D7'}
                       </button>
                     </div>
                   </div>
@@ -332,7 +337,7 @@ const DashboardPage: React.FC = () => {
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Add Manual Entry</h2>
-              <button className="modal-close" onClick={() => setShowManual(false)}>✕</button>
+              <button className="modal-close" onClick={() => setShowManual(false)}>\u00D7</button>
             </div>
             {manualError && <div className="modal-error">{manualError}</div>}
             <form onSubmit={handleManual} className="modal-form">
@@ -344,6 +349,7 @@ const DashboardPage: React.FC = () => {
                   onChange={e => setManualTask(e.target.value)}
                   placeholder="What did you work on?"
                   required
+                  autoFocus
                 />
               </div>
               <div className="field">
@@ -381,7 +387,7 @@ const DashboardPage: React.FC = () => {
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Edit Entry</h2>
-              <button className="modal-close" onClick={() => setEditEntry(null)}>✕</button>
+              <button className="modal-close" onClick={() => setEditEntry(null)}>\u00D7</button>
             </div>
             <form onSubmit={handleEdit} className="modal-form">
               <div className="field">
