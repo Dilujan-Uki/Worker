@@ -12,6 +12,7 @@ const app = express();
 // ── CORS ───────────────────────────────────────────────────────────────────
 const allowedOrigins = [
   process.env.CLIENT_URL || 'http://localhost:3000',
+  'https://clockify-frontend.diludj592.workers.dev',
   'http://localhost:3000',
   'http://localhost:3001',
 ];
@@ -33,10 +34,19 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // ── DATABASE ───────────────────────────────────────────────────────────────
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ MongoDB Connected'))
+console.log('⏳ Connecting to MongoDB...');
+mongoose.connect(process.env.MONGODB_URI, {
+  serverSelectionTimeoutMS: 5000, // Timeout after 5s
+})
+  .then(() => console.log('✅ MongoDB Connected Successfully'))
   .catch((err) => {
-    console.error('❌ MongoDB Error:', err.message);
+    console.error('❌ MongoDB Connection Error Details:', {
+      message: err.message,
+      code: err.code,
+      name: err.name
+    });
+    // In production, we might want to keep the process alive so we can see logs
+    // but Railway will restart it anyway if it exits.
     process.exit(1);
   });
 

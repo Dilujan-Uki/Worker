@@ -39,7 +39,7 @@ const LoginPage: React.FC = () => {
       <div className="auth-card">
         <div className="auth-wordmark">
           <span className="auth-dot" />
-          CLOCKIFY
+          WORKER
         </div>
 
         <h1 className="auth-heading">Welcome back</h1>

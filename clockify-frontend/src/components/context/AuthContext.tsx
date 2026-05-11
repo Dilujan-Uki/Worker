@@ -4,7 +4,7 @@ import type { User, AuthContextType } from '../types';
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const STORAGE_KEY = 'clockify_user';
+const STORAGE_KEY = 'WORKER_user';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);

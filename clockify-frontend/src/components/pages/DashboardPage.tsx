@@ -200,7 +200,7 @@ const DashboardPage: React.FC = () => {
       <header className="dash-header">
         <div className="dash-logo">
           <span className="dash-dot" />
-          CLOCKIFY
+          WORKER
         </div>
         <div className="dash-user">
           {user?.avatar && (
