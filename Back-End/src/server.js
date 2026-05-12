@@ -76,6 +76,19 @@ if (!process.env.MONGODB_URI) {
     });
 }
 
+// ── ERROR HANDLING ──────────────────────────────────────────────────────────
+process.on('uncaughtException', (err) => {
+  console.error('🔥 UNCAUGHT EXCEPTION! Shutting down...');
+  console.error(err.name, err.message, err.stack);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.error('💥 UNHANDLED REJECTION! Shutting down...');
+  console.error(err);
+  process.exit(1);
+});
+
 // ── 404 ─────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.method} ${req.url} not found` });
@@ -90,4 +103,5 @@ app.use((err, req, res, _next) => {
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
+
 
