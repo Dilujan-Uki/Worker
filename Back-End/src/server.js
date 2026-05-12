@@ -2,7 +2,32 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+
+// ── ERROR HANDLING (Top of file to catch all) ───────────────────────────────
+process.on('uncaughtException', (err) => {
+  console.error('🔥 UNCAUGHT EXCEPTION! Shutting down...');
+  console.error(err.name, err.message);
+  console.error(err.stack);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.error('💥 UNHANDLED REJECTION! Shutting down...');
+  console.error(err);
+  process.exit(1);
+});
+
 dotenv.config();
+console.log(`📂 Current Working Directory: ${process.cwd()}`);
+console.log(`🌐 Environment PORT: ${process.env.PORT}`);
+console.log(`📦 Node Version: ${process.version}`);
+
+// Polyfill globalThis.crypto for older Node versions if needed by dependencies (like Mongoose/MongoDB)
+import crypto from 'crypto';
+if (typeof globalThis.crypto === 'undefined') {
+  console.log('🔧 Polyfilling globalThis.crypto');
+  globalThis.crypto = crypto;
+}
 
 import authRoutes from './routes/authRoutes.js';
 import timeEntryRoutes from './routes/timeEntryRoutes.js';
@@ -59,10 +84,20 @@ app.get('/api/health', (req, res) => {
 
 // ── SERVER START ───────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📡 API available at http://localhost:${PORT}/api`);
-});
+const server = app.listen(PORT, '0.0.0.0')
+  .on('listening', () => {
+    const addr = server.address();
+    const bind = typeof addr === 'string' ? `pipe ${addr}` : (addr ? `port ${addr.port}` : 'unknown port');
+    console.log(`🚀 Server listening on ${bind}`);
+    console.log(`📡 API available at /api`);
+  })
+  .on('error', (err) => {
+    console.error('❌ Server Failed to Start:');
+    console.error(err);
+    process.exit(1);
+  });
+
+
 
 // ── DATABASE ───────────────────────────────────────────────────────────────
 if (!process.env.MONGODB_URI) {
@@ -76,23 +111,11 @@ if (!process.env.MONGODB_URI) {
     });
 }
 
-// ── ERROR HANDLING ──────────────────────────────────────────────────────────
-process.on('uncaughtException', (err) => {
-  console.error('🔥 UNCAUGHT EXCEPTION! Shutting down...');
-  console.error(err.name, err.message, err.stack);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (err) => {
-  console.error('💥 UNHANDLED REJECTION! Shutting down...');
-  console.error(err);
-  process.exit(1);
-});
-
 // ── 404 ─────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.method} ${req.url} not found` });
 });
+
 
 // ── GLOBAL ERROR HANDLER ────────────────────────────────────────────────────
 app.use((err, req, res, _next) => {
