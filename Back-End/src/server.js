@@ -100,7 +100,9 @@ app.use((err, req, res, _next) => {
 if (!process.env.MONGODB_URI) {
   console.error('❌ CRITICAL: MONGODB_URI is not defined in environment variables!');
 } else {
-  console.log('⏳ Connecting to MongoDB...');
+  const uriPreview = process.env.MONGODB_URI.substring(0, 20);
+  console.log(`⏳ Connecting to MongoDB... (URI starts with: "${uriPreview}")`);
+
   mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('✅ MongoDB Connected Successfully'))
     .catch((err) => {
