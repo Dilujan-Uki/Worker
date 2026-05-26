@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import GoogleSignInButton from './GoogleSignInButton';
 import './Auth.css';
 
 const LoginPage: React.FC = () => {
-  const { login, googleLogin } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,12 +26,6 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  const handleGoogleCredential = async (credential: string): Promise<void> => {
-    setError('');
-    await googleLogin(credential);
-    navigate('/dashboard');
-  };
-
   return (
     <div className="auth-page">
       <div className="auth-card">
@@ -46,16 +38,6 @@ const LoginPage: React.FC = () => {
         <p className="auth-sub">Sign in to continue tracking your time.</p>
 
         {error && <div className="auth-error">{error}</div>}
-
-        <GoogleSignInButton
-          onCredential={handleGoogleCredential}
-          loading={googleLoading}
-          setLoading={setGoogleLoading}
-          setError={setError}
-          label="Sign in with Google"
-        />
-
-        <div className="auth-divider">or</div>
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="field">
@@ -82,8 +64,8 @@ const LoginPage: React.FC = () => {
               autoComplete="current-password"
             />
           </div>
-          <button className="auth-submit" type="submit" disabled={loading || googleLoading}>
-            {loading ? <span className="btn-loading" /> : 'Sign in \u2192'}
+          <button className="auth-submit" type="submit" disabled={loading}>
+            {loading ? <span className="btn-loading" /> : 'Sign in →'}
           </button>
         </form>
 

@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import GoogleSignInButton from './GoogleSignInButton';
 import './Auth.css';
 
 const RegisterPage: React.FC = () => {
-  const { register, googleLogin } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
@@ -14,7 +13,6 @@ const RegisterPage: React.FC = () => {
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,12 +36,6 @@ const RegisterPage: React.FC = () => {
     }
   };
 
-  const handleGoogleCredential = async (credential: string): Promise<void> => {
-    setError('');
-    await googleLogin(credential);
-    navigate('/dashboard');
-  };
-
   return (
     <div className="auth-page">
       <div className="auth-card">
@@ -56,16 +48,6 @@ const RegisterPage: React.FC = () => {
         <p className="auth-sub">Start tracking your time today.</p>
 
         {error && <div className="auth-error">{error}</div>}
-
-        <GoogleSignInButton
-          onCredential={handleGoogleCredential}
-          loading={googleLoading}
-          setLoading={setGoogleLoading}
-          setError={setError}
-          label="Sign up with Google"
-        />
-
-        <div className="auth-divider">or</div>
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="field">
@@ -111,13 +93,13 @@ const RegisterPage: React.FC = () => {
               type="password"
               value={confirm}
               onChange={e => setConfirm(e.target.value)}
-              placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+              placeholder="••••••••"
               required
               autoComplete="new-password"
             />
           </div>
-          <button className="auth-submit" type="submit" disabled={loading || googleLoading}>
-            {loading ? <span className="btn-loading" /> : 'Create Account \u2192'}
+          <button className="auth-submit" type="submit" disabled={loading}>
+            {loading ? <span className="btn-loading" /> : 'Create Account →'}
           </button>
         </form>
 

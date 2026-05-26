@@ -203,14 +203,6 @@ const DashboardPage: React.FC = () => {
           WORKER
         </div>
         <div className="dash-user">
-          {user?.avatar && (
-            <img
-              className="dash-avatar"
-              src={user.avatar}
-              alt={user.name}
-              referrerPolicy="no-referrer"
-            />
-          )}
           <span className="dash-name">{user?.name}</span>
           <button className="dash-logout" onClick={logout}>Sign out</button>
         </div>

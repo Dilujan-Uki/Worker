@@ -2,6 +2,9 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
+import authRoutes from './routes/authRoutes.js';
+import timeEntryRoutes from './routes/timeEntryRoutes.js';
 
 // ── ERROR HANDLING (Top of file to catch all) ───────────────────────────────
 process.on('uncaughtException', (err) => {
@@ -22,15 +25,11 @@ console.log(`📂 Current Working Directory: ${process.cwd()}`);
 console.log(`🌐 Environment PORT: ${process.env.PORT}`);
 console.log(`📦 Node Version: ${process.version}`);
 
-// Polyfill globalThis.crypto for older Node versions if needed by dependencies (like Mongoose/MongoDB)
-import crypto from 'crypto';
+// Polyfill globalThis.crypto for Node < 20 (webcrypto not exposed as a global until Node 20)
 if (typeof globalThis.crypto === 'undefined') {
   console.log('🔧 Polyfilling globalThis.crypto');
-  globalThis.crypto = crypto;
+  globalThis.crypto = crypto.webcrypto;
 }
-
-import authRoutes from './routes/authRoutes.js';
-import timeEntryRoutes from './routes/timeEntryRoutes.js';
 
 const app = express();
 
@@ -40,18 +39,16 @@ const allowedOrigins = [
   'https://clockify-frontend.diludj592.workers.dev',
   'http://localhost:3000',
   'http://localhost:3001',
-].filter(Boolean); // Remove undefined/null values
+].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
-    
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     } else {
       console.warn(`⚠️ CORS blocked for origin: ${origin}`);
-      return callback(null, false); // Just deny, don't throw error
+      return callback(null, false);
     }
   },
   credentials: true,
@@ -82,6 +79,33 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// ── 404 ─────────────────────────────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Route ${req.method} ${req.url} not found` });
+});
+
+// ── GLOBAL ERROR HANDLER ────────────────────────────────────────────────────
+app.use((err, req, res, _next) => {
+  console.error('Server Error:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// ── DATABASE ───────────────────────────────────────────────────────────────
+if (!process.env.MONGODB_URI) {
+  console.error('❌ CRITICAL: MONGODB_URI is not defined in environment variables!');
+} else {
+  console.log('⏳ Connecting to MongoDB...');
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('✅ MongoDB Connected Successfully'))
+    .catch((err) => {
+      console.error('❌ MongoDB Connection Error:', err.message);
+    });
+}
+
 // ── SERVER START ───────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, '0.0.0.0')
@@ -96,35 +120,3 @@ const server = app.listen(PORT, '0.0.0.0')
     console.error(err);
     process.exit(1);
   });
-
-
-
-// ── DATABASE ───────────────────────────────────────────────────────────────
-if (!process.env.MONGODB_URI) {
-  console.error('❌ CRITICAL: MONGODB_URI is not defined in environment variables!');
-} else {
-  console.log('⏳ Connecting to MongoDB...');
-  mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('✅ MongoDB Connected Successfully'))
-    .catch((err) => {
-      console.error('❌ MongoDB Connection Error:', err.message);
-    });
-}
-
-// ── 404 ─────────────────────────────────────────────────────────────────────
-app.use((req, res) => {
-  res.status(404).json({ success: false, message: `Route ${req.method} ${req.url} not found` });
-});
-
-
-// ── GLOBAL ERROR HANDLER ────────────────────────────────────────────────────
-app.use((err, req, res, _next) => {
-  console.error('Server Error:', err);
-  res.status(500).json({ 
-    success: false, 
-    message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-});
-
-
