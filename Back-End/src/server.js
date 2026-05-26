@@ -25,7 +25,7 @@ console.log(`📂 Current Working Directory: ${process.cwd()}`);
 console.log(`🌐 Environment PORT: ${process.env.PORT}`);
 console.log(`📦 Node Version: ${process.version}`);
 
-// Polyfill globalThis.crypto for Node < 20 (webcrypto not exposed as a global until Node 20)
+// Polyfill globalThis.crypto for Node < 20
 if (typeof globalThis.crypto === 'undefined') {
   console.log('🔧 Polyfilling globalThis.crypto');
   globalThis.crypto = crypto.webcrypto;
@@ -41,20 +41,23 @@ const allowedOrigins = [
   'http://localhost:3001',
 ].filter(Boolean);
 
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
-    } else {
-      console.warn(`⚠️ CORS blocked for origin: ${origin}`);
-      return callback(null, false);
     }
+    console.warn(`⚠️ CORS blocked for origin: ${origin}`);
+    return callback(null, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+};
+
+// Handle preflight requests for all routes
+app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
 
 // ── BODY PARSING ───────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10kb' }));
@@ -74,7 +77,6 @@ app.get('/api/health', (req, res) => {
     env: {
       has_mongo: !!process.env.MONGODB_URI,
       has_jwt: !!process.env.JWT_SECRET,
-      has_google: !!process.env.GOOGLE_CLIENT_ID,
     }
   });
 });
